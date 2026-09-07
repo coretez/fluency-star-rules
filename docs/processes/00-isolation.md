@@ -86,53 +86,72 @@ Route by the `shadow-ai` tag to a dedicated view/queue. Requirements:
 The only findings that cross into the incident queue are RC-05.03, RC-09.05 and RC-03.06
 (unsigned binary carrying AI metadata) — and only after a human review step.
 
-### 5. Rule budget — 100 by default, and 34 of them is a third of it
+### 5. Rule budget — 100 documented, tier mapping UNVERIFIED
 
-**Corrected twice. This version is grounded in SentinelOne's package datasheet, not
-marketing copy.**
-
-| Source | Figure | What it is |
+| Source | Figure | Confidence |
 |---|---|---|
-| [Package datasheet](https://www.cvisionintl.com/media/xhlbwibj/datasheet-sentinelone-singularity-product-packages.pdf) | *"Storyline Active Response™ (STAR) Custom Detection Rules. **100 default. Upgradable.**"* | The **entitlement** |
-| [STAR blog](https://www.sentinelone.com/blog/customize-your-edr-to-adapt-to-your-environment-with-sentinelone-storyline-active-response-star/) | *"up to 1,000 STAR rules"* | The upgraded **ceiling**, for large enterprises |
+| [Package datasheet](https://www.cvisionintl.com/media/xhlbwibj/datasheet-sentinelone-singularity-product-packages.pdf) (`S1-DS-...-02162024`, © 2024) | *"STAR Custom Detection Rules. **100 default. Upgradable.**"* | Documented |
+| [STAR blog](https://www.sentinelone.com/blog/customize-your-edr-to-adapt-to-your-environment-with-sentinelone-storyline-active-response-star/) | *"up to **1,000** STAR rules"* | Documented |
+| "Complete gets 1,000" | — | ❌ **Not established. Do not assume it.** |
 
-The blog's 1,000 is what the engine can evaluate. **The default entitlement is 100.**
+#### Three reasons to treat the mapping as unknown
 
-At 34 rules **this pack is ~34% of a default tenant's entire custom-detection capacity.**
-That is a lot to spend on one policy programme, and it is a real constraint — the earlier
-revision of this control, written off the 1,000 figure, was wrong.
+1. **The tier ticks do not extract.** The datasheet's Core/Control/Complete columns mark
+   inclusion with glyphs that are graphics, not text. Zero extracted. Which tiers include
+   STAR, and whether the 100 varies by tier, is **not readable from this document.**
+2. **The datasheet is from February 2024** and describes Core / Control / Complete. The
+   current published lineup is **Complete / Commercial / Enterprise**. The figures may
+   still hold; the tier names definitively do not.
+3. **An unattributed "Open XDR data only" qualifier sits in the STAR row's tier columns.**
+   See §5b — it is potentially the most consequential unknown in this repo.
+
+#### The working assumption
+
+**100 default, upgradable toward a 1,000 ceiling.** That reads consistently across both
+sources, but it is an inference, not a documented mapping.
 
 ```
-ai_rule_budget = 25 rules          # 25% of the 100-rule default entitlement
+ai_rule_budget = 25 rules          # 25% of the documented 100 default
 ```
 
-**The full 34-rule pack does not fit that budget, deliberately.** Three ways out, in order
-of preference:
+The full 34-rule pack deliberately does not fit. Deploy by wave (wave 1 is 7 rules),
+upgrade the entitlement, or prune the `/v3` hash variations first — they are the harvest
+product and duplicate coverage `/v1` and `/v4` already give you.
 
-1. **Deploy by wave, not wholesale.** Wave 1 is 7 rules. Most tenants never need all 34 —
-   the RC-03.0x variations exist so you can pick the tiers that match the tenant's risk,
-   not so you deploy all four everywhere.
-2. **Upgrade the entitlement.** It is explicitly "upgradable." If a tenant wants full
-   coverage, that is the conversation — and it is cheaper than the Cloud Funnel one.
-3. **Prune.** If neither, drop the `/v3` hash variations first: they are the harvest
-   product and duplicate coverage `/v1` and `/v4` already provide.
+**Record each tenant's real `star_allowance`.** An upgraded tenant looks identical to a
+default one until you hit the wall.
 
-Record the tenant's actual entitlement in `tenants/<name>.yaml` as `star_allowance`.
-Do not guess it — a tenant that upgraded looks identical to one that did not until you
-hit the wall.
+### 5a. Tier prerequisite — Complete or above *(probable, not confirmed)*
 
-### 5a. Tier prerequisite — STAR needs Singularity Complete
+The Complete description block lists *"Custom detections and automated hunting rules with
+Storyline Active Response (STAR™)"* alongside Deep Visibility and Storyline, which puts
+STAR at Complete and above. That reading comes from a **two-column prose layout**, not from
+the tick table, so treat it as probable rather than confirmed.
 
-STAR is a **Singularity Complete** feature: *"Custom detections and automated hunting rules
-with Storyline Active Response (STAR™)"* sits in the Complete column, alongside Deep
-Visibility and Storyline. Core and Control do not have it.
+The current lineup starts at Complete, so any tenant on a current package should have STAR.
+The exposure is legacy Core/Control tenants. `preflight.py` blocks on those.
 
-The current published lineup starts at Complete (then Commercial, Enterprise), so **any
-tenant on a current package has STAR**. The exposure is legacy Core/Control tenants — for
-them this entire repo is unusable until they upgrade, and that is worth establishing before
-you scope any work for them.
+### 5b. OPEN QUESTION — "Open XDR data only"
 
-`tenants/<name>.yaml` now carries `s1_package`. `preflight.py` blocks on Core/Control.
+The STAR row carries the qualifier **"Open XDR data only"** in one of the tier columns. The
+column it belongs to did not extract.
+
+**If that qualifier applies to a tier one of your tenants is on, every rule in this repo is
+inoperable there.** Open XDR data is *ingested third-party* telemetry. Every rule here
+queries **native** SentinelOne endpoint events — `tgt.process.*`, `event.dns.request`,
+`url.address`. A STAR entitlement limited to Open XDR data would not evaluate any of them.
+
+This is not a tuning detail. It decides whether the pack functions at all on a given tier,
+and it is the first thing to confirm.
+
+#### Ask the rep, in writing
+
+1. For **Singularity Complete**, what is the STAR custom-detection-rule entitlement — 100,
+   1,000, or something else? What does an upgrade cost and what is the ceiling?
+2. Does the entitlement differ across **Complete / Commercial / Enterprise**?
+3. **Does STAR on our tier evaluate native SentinelOne endpoint telemetry, or Open XDR
+   ingested data only?** ← blocking
+4. Is there a per-Site/Account/Group limit distinct from the tenant total?
 
 ### 6. Scope discipline — group-scoped by default
 

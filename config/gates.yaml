@@ -15,16 +15,24 @@ canary:
   max_fp_rate: 0.10
 
 rule_budget:
-  # S1 package datasheet: "STAR Custom Detection Rules. 100 default. Upgradable."
-  # The blog's "up to 1,000" is the upgraded ceiling, NOT the default entitlement.
-  # At 34 rules this pack is ~34% of a default tenant's whole custom-detection capacity.
+  # S1 package datasheet (Feb 2024): "STAR Custom Detection Rules. 100 default. Upgradable."
+  # Blog: engine evaluates "up to 1,000". The 100 -> 1,000 upgrade path is an INFERENCE:
+  # the datasheet's per-tier ticks are graphics and did not extract, so which tiers get
+  # what is NOT established. See SOP-00 §5. Confirm per tenant; do not assume 1,000.
   platform_default_entitlement: 100
   platform_ceiling_published: 1000
   max_pct_of_star_allowance: 0.25
   max_rules_absolute: 25            # 25% of the 100 default — deploy by wave, not wholesale
 
-# STAR is a Singularity Complete feature. Core/Control cannot run any of this.
+# STAR appears in the Complete feature block (probable, read from prose not the tick
+# table). Current lineup starts at Complete, so exposure is legacy Core/Control tenants.
 required_s1_package: [complete, commercial, enterprise]
+
+# BLOCKING OPEN QUESTION (SOP-00 §5b): the datasheet's STAR row carries an
+# "Open XDR data only" qualifier whose tier column did not extract. If it applies to a
+# tenant's tier, NO rule here works — they all query native endpoint telemetry, not
+# ingested third-party data. Confirm with the rep before deploying to a new tier.
+star_evaluates_native_telemetry: unconfirmed
 
 severity_ceiling:         # console severity, NOT contract severity
   default_max: medium
