@@ -15,12 +15,16 @@ canary:
   max_fp_rate: 0.10
 
 rule_budget:
-  # SentinelOne publishes a ceiling of up to 1,000 STAR rules evaluated per event.
-  # Rule count is therefore NOT the binding constraint — analyst attention is, and that
-  # is enforced by volume_budget above plus the separate queue (SOP-00 section 4).
+  # S1 package datasheet: "STAR Custom Detection Rules. 100 default. Upgradable."
+  # The blog's "up to 1,000" is the upgraded ceiling, NOT the default entitlement.
+  # At 34 rules this pack is ~34% of a default tenant's whole custom-detection capacity.
+  platform_default_entitlement: 100
   platform_ceiling_published: 1000
-  max_rules_absolute: 60
-  max_pct_of_star_allowance: 0.25   # applies only if a tenant's allowance is lower
+  max_pct_of_star_allowance: 0.25
+  max_rules_absolute: 25            # 25% of the 100 default — deploy by wave, not wholesale
+
+# STAR is a Singularity Complete feature. Core/Control cannot run any of this.
+required_s1_package: [complete, commercial, enterprise]
 
 severity_ceiling:         # console severity, NOT contract severity
   default_max: medium

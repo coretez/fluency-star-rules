@@ -48,6 +48,15 @@ def main():
     if not tp.exists(): print(f"FAIL  no tenant overlay: tenants/{a.tenant}.yaml"); return 1
     T = yaml.safe_load(tp.read_text())
 
+    # ---- tier prerequisite (SOP-00 §5a)
+    pkg = str(T.get('s1_package', '')).lower()
+    allowed = G.get('required_s1_package', [])
+    if not pkg:
+        warn("tenant has no s1_package recorded — STAR requires Singularity Complete or above (SOP-00 §5a)")
+    elif pkg not in allowed:
+        fail(f"s1_package={pkg}: STAR is a Singularity Complete feature. Core/Control cannot "
+             f"run any rule in this repo. Establish the tenant's package before scoping work")
+
     selected = []
     for f, r in rules():
         if a.wave is not None:
@@ -64,9 +73,9 @@ def main():
         warn(f"tenant has no star_allowance recorded — cannot verify rule budget (SOP-00 §5)")
     if len(selected) > budget:
         fail(f"rule budget: {len(selected)} rules exceeds budget {budget}. "
-             f"The platform can take more (published ceiling ~1,000) — the question is "
-             f"whether anyone reads the output of the rules already deployed. "
-             f"Retire a low-value rule rather than raising the cap")
+             f"Default STAR entitlement is 100 rules, so this pack is a large share of it. "
+             f"Deploy by wave rather than wholesale, upgrade the entitlement, or prune the "
+             f"/v3 hash variations first (SOP-00 §5)")
 
     # ---- per-rule gates
     for f, r in selected:

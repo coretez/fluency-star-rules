@@ -5,7 +5,12 @@ tenant: example-acme
 display_name: "Acme Corp"
 
 # RC-08.03 is unusable fleet-wide. Groups where ANY consumer AI use is out of policy.
-# SentinelOne STAR rule allowance for this tenant (SOP-00 §5).
+# SentinelOne package. STAR requires Complete or above (SOP-00 §5a).
+# core | control | complete | commercial | enterprise
+s1_package: complete
+
+# STAR custom-detection-rule entitlement. 100 is the platform default; confirm per tenant,
+# it is upgradable and an upgraded tenant looks identical until you hit the wall (SOP-00 §5).
 star_allowance: 100
 star_in_use: 43
 

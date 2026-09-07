@@ -86,36 +86,53 @@ Route by the `shadow-ai` tag to a dedicated view/queue. Requirements:
 The only findings that cross into the incident queue are RC-05.03, RC-09.05 and RC-03.06
 (unsigned binary carrying AI metadata) — and only after a human review step.
 
-### 5. Rule budget — attention, not capacity
+### 5. Rule budget — 100 by default, and 34 of them is a third of it
 
-**Corrected 2026-09-07.** This control was originally written around an unknown STAR rule
-cap, on the assumption that AI rules might crowd out threat detection. SentinelOne's own
-figure says otherwise:
+**Corrected twice. This version is grounded in SentinelOne's package datasheet, not
+marketing copy.**
 
-> "STAR evaluates each event, in a stream of a billion daily events, against **up to 1,000
-> STAR rules**."
-> — [Customize Your EDR with STAR](https://www.sentinelone.com/blog/customize-your-edr-to-adapt-to-your-environment-with-sentinelone-storyline-active-response-star/)
+| Source | Figure | What it is |
+|---|---|---|
+| [Package datasheet](https://www.cvisionintl.com/media/xhlbwibj/datasheet-sentinelone-singularity-product-packages.pdf) | *"Storyline Active Response™ (STAR) Custom Detection Rules. **100 default. Upgradable.**"* | The **entitlement** |
+| [STAR blog](https://www.sentinelone.com/blog/customize-your-edr-to-adapt-to-your-environment-with-sentinelone-storyline-active-response-star/) | *"up to 1,000 STAR rules"* | The upgraded **ceiling**, for large enterprises |
 
-At 34 rules this pack is ~3% of that ceiling. **Rule count is not the binding constraint
-and this control was over-tight.**
+The blog's 1,000 is what the engine can evaluate. **The default entitlement is 100.**
 
-Treat the published figure as a capability statement for large enterprises, not a
-guaranteed per-tenant entitlement — confirm your own limit — but plan on the basis that
-capacity is not what runs out.
-
-**What actually runs out is analyst attention.** The real budget is enforced elsewhere and
-should stay tight:
-
-- the **volume budget** in [SOP-02](02-testing.md) T2b — events per 100 endpoints per day
-- the **separate queue** in §4 above — nothing routes to the incident queue
+At 34 rules **this pack is ~34% of a default tenant's entire custom-detection capacity.**
+That is a lot to spend on one policy programme, and it is a real constraint — the earlier
+revision of this control, written off the 1,000 figure, was wrong.
 
 ```
-ai_rule_budget = 60 rules          # ~6% of the published 1,000 ceiling
+ai_rule_budget = 25 rules          # 25% of the 100-rule default entitlement
 ```
 
-Still record the tenant's actual allowance in `tenants/<name>.yaml`. If you approach 60,
-the question to ask is not "can the platform take more" — it can — but "is anyone reading
-the output of the ones we already have."
+**The full 34-rule pack does not fit that budget, deliberately.** Three ways out, in order
+of preference:
+
+1. **Deploy by wave, not wholesale.** Wave 1 is 7 rules. Most tenants never need all 34 —
+   the RC-03.0x variations exist so you can pick the tiers that match the tenant's risk,
+   not so you deploy all four everywhere.
+2. **Upgrade the entitlement.** It is explicitly "upgradable." If a tenant wants full
+   coverage, that is the conversation — and it is cheaper than the Cloud Funnel one.
+3. **Prune.** If neither, drop the `/v3` hash variations first: they are the harvest
+   product and duplicate coverage `/v1` and `/v4` already provide.
+
+Record the tenant's actual entitlement in `tenants/<name>.yaml` as `star_allowance`.
+Do not guess it — a tenant that upgraded looks identical to one that did not until you
+hit the wall.
+
+### 5a. Tier prerequisite — STAR needs Singularity Complete
+
+STAR is a **Singularity Complete** feature: *"Custom detections and automated hunting rules
+with Storyline Active Response (STAR™)"* sits in the Complete column, alongside Deep
+Visibility and Storyline. Core and Control do not have it.
+
+The current published lineup starts at Complete (then Commercial, Enterprise), so **any
+tenant on a current package has STAR**. The exposure is legacy Core/Control tenants — for
+them this entire repo is unusable until they upgrade, and that is worth establishing before
+you scope any work for them.
+
+`tenants/<name>.yaml` now carries `s1_package`. `preflight.py` blocks on Core/Control.
 
 ### 6. Scope discipline — group-scoped by default
 
