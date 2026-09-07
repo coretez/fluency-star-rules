@@ -41,6 +41,18 @@ An accidental quarantine of a business-approved AI tool is a **customer-visible 
 caused by a policy rule. There is no shadow-AI finding urgent enough to justify that risk.
 This is not tunable per tenant.
 
+**Why this control needs to be explicit rather than assumed.** In SentinelOne these are
+checkboxes in the rule-creation flow, not a separate privileged action:
+
+> "by checking a box when creating a rule, the analyst can enable STAR to kill any process
+> that matches a STAR rule… By checking a different box, the user can enable STAR to
+> automatically quarantine any device that sees a matching event."
+> — [SentinelOne on STAR](https://www.sentinelone.com/blog/customize-your-edr-to-adapt-to-your-environment-with-sentinelone-storyline-active-response-star/)
+
+Kill and quarantine are one click away from alert-only, on the same screen, during routine
+rule authoring. That is precisely why it is a written control with a
+[rollback SOP](05-rollback.md) behind it rather than an assumption about good judgement.
+
 ### 3. Severity ceiling — contract severity ≠ console severity
 
 Contract severity expresses *analytical* importance. Console severity drives *paging*.
@@ -74,19 +86,36 @@ Route by the `shadow-ai` tag to a dedicated view/queue. Requirements:
 The only findings that cross into the incident queue are RC-05.03, RC-09.05 and RC-03.06
 (unsigned binary carrying AI metadata) — and only after a human review step.
 
-### 5. Rule budget — never starve threat detection
+### 5. Rule budget — attention, not capacity
 
-STAR enforces a cap on active rules per scope. AI detection must not consume slots that
-threat detection needs.
+**Corrected 2026-09-07.** This control was originally written around an unknown STAR rule
+cap, on the assumption that AI rules might crowd out threat detection. SentinelOne's own
+figure says otherwise:
+
+> "STAR evaluates each event, in a stream of a billion daily events, against **up to 1,000
+> STAR rules**."
+> — [Customize Your EDR with STAR](https://www.sentinelone.com/blog/customize-your-edr-to-adapt-to-your-environment-with-sentinelone-storyline-active-response-star/)
+
+At 34 rules this pack is ~3% of that ceiling. **Rule count is not the binding constraint
+and this control was over-tight.**
+
+Treat the published figure as a capability statement for large enterprises, not a
+guaranteed per-tenant entitlement — confirm your own limit — but plan on the basis that
+capacity is not what runs out.
+
+**What actually runs out is analyst attention.** The real budget is enforced elsewhere and
+should stay tight:
+
+- the **volume budget** in [SOP-02](02-testing.md) T2b — events per 100 endpoints per day
+- the **separate queue** in §4 above — nothing routes to the incident queue
 
 ```
-ai_rule_budget = min(25% of tenant STAR allowance, 20 rules)
+ai_rule_budget = 60 rules          # ~6% of the published 1,000 ceiling
 ```
 
-Record the tenant's allowance and current usage in `tenants/<name>.yaml` before the first
-deploy. If adding a rule would breach the budget, **retire a lower-value AI rule** — do
-not raise the budget. Budget pressure is the correct signal that the rule set needs
-pruning.
+Still record the tenant's actual allowance in `tenants/<name>.yaml`. If you approach 60,
+the question to ask is not "can the platform take more" — it can — but "is anyone reading
+the output of the ones we already have."
 
 ### 6. Scope discipline — group-scoped by default
 

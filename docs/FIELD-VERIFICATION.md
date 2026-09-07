@@ -197,6 +197,18 @@ console, or onboard Cloud Funnel (below).
 
 ---
 
+## STAR alert egress — a path that needs no Cloud Funnel
+
+STAR alerts are consumable "in the UI or via **Syslog** for further analysis in a SIEM"
+([SentinelOne](https://www.sentinelone.com/blog/customize-your-edr-to-adapt-to-your-environment-with-sentinelone-storyline-active-response-star/)).
+
+So the **output** of these rules can reach Fluency over syslog without Cloud Funnel. That
+centralises detections across tenants and lets RC-10 correlation run on rule hits.
+
+It does **not** solve discovery. Syslog carries alerts the rules already produced — the
+same closed loop as the Alerts API. Mining for what you missed still needs the raw event
+stream. Two different problems, and only one of them is free.
+
 ## Unexpected find — Copilot telemetry already ingested
 
 `@fields.CopilotEventData.*` is present, from the O365 audit stream:

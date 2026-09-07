@@ -64,7 +64,9 @@ def main():
         warn(f"tenant has no star_allowance recorded — cannot verify rule budget (SOP-00 §5)")
     if len(selected) > budget:
         fail(f"rule budget: {len(selected)} rules exceeds budget {budget}. "
-             f"Retire a lower-value rule; do NOT raise the budget")
+             f"The platform can take more (published ceiling ~1,000) — the question is "
+             f"whether anyone reads the output of the rules already deployed. "
+             f"Retire a low-value rule rather than raising the cap")
 
     # ---- per-rule gates
     for f, r in selected:

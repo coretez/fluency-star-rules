@@ -15,8 +15,12 @@ canary:
   max_fp_rate: 0.10
 
 rule_budget:
-  max_pct_of_star_allowance: 0.25
-  max_rules_absolute: 20
+  # SentinelOne publishes a ceiling of up to 1,000 STAR rules evaluated per event.
+  # Rule count is therefore NOT the binding constraint — analyst attention is, and that
+  # is enforced by volume_budget above plus the separate queue (SOP-00 section 4).
+  platform_ceiling_published: 1000
+  max_rules_absolute: 60
+  max_pct_of_star_allowance: 0.25   # applies only if a tenant's allowance is lower
 
 severity_ceiling:         # console severity, NOT contract severity
   default_max: medium
