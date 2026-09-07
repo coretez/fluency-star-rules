@@ -1,0 +1,25 @@
+id: RC-08.05/v2
+contract: RC-08.05
+variation: v2
+name: HTTPS CONNECT to AI service
+platform: sentinelone
+os:
+- windows
+- macos
+identity_tier: null
+primitive: TP-URL
+severity: medium
+status: active
+refs:
+  domains:
+  - tier_a_jurisdiction
+  - tier_b_aggregator
+  - api_endpoints
+query: 'event.type = "CONNECT"
+
+  AND url.address in contains anycase ({{ domains:high_risk }})
+
+  '
+notes: 'CONNECT is the HTTPS proxy tunnel method — it carries the destination host in cleartext even though
+  the payload is encrypted. Narrower and higher-signal than v1: a CONNECT to a Tier A or aggregator host
+  is a deliberate tunnel.'

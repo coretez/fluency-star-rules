@@ -1,0 +1,20 @@
+id: RC-07.03/v1
+contract: RC-07.03
+variation: v1
+name: AI-native browser executed
+platform: sentinelone
+os:
+- windows
+- macos
+identity_tier: IT-3
+primitive: TP-PROC
+severity: high
+status: active
+refs:
+  apps:
+  - comet
+query: "event.type = \"Process Creation\"\nAND (\n  tgt.process.image.path in contains anycase ({{ app:comet.paths\
+  \ }})\n  OR tgt.process.image.path in contains anycase (\"/Applications/Dia.app/\")\n  OR tgt.process.publisher\
+  \ in contains anycase (\"Perplexity\")\n)\nAND NOT tgt.process.image.path contains anycase \"Helper\"\
+  \n"
+notes: Agentic — acts on the user's behalf, far wider blast radius than a chat window.

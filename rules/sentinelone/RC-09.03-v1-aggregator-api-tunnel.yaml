@@ -1,0 +1,25 @@
+id: RC-09.03/v1
+contract: RC-09.03
+variation: v1
+name: Aggregator API called by non-browser process
+platform: sentinelone
+os:
+- windows
+- macos
+- linux
+identity_tier: null
+primitive: TP-DNS
+severity: high
+status: active
+refs:
+  domains:
+  - tier_b_aggregator
+query: 'event.type = "DNS Resolved"
+
+  AND event.dns.request in contains anycase ({{ domains:tier_b_aggregator }})
+
+  AND NOT src.process.name in anycase ({{ browser_processes }})
+
+  '
+notes: "Narrower and higher-signal than RC-08.02. An aggregator called programmatically is a deliberate\
+  \ tunnel to an arbitrary backend model \u2014 it defeats any per-vendor domain policy you have."

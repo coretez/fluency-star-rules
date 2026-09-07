@@ -1,0 +1,20 @@
+id: RC-03.02/v3
+contract: RC-03.02
+variation: v3
+name: ChatGPT Desktop execution (hash)
+platform: sentinelone
+os:
+- windows
+- macos
+identity_tier: IT-4
+primitive: TP-PROC-HASH
+severity: low
+status: blocked-on-harvest
+refs:
+  apps:
+  - chatgpt-desktop
+query: 'event.type = "Process Creation"
+
+  AND tgt.process.image.sha256 in ({{ hashes:chatgpt-desktop }})
+
+  '

@@ -1,0 +1,27 @@
+id: RC-09.04/v1
+contract: RC-09.04
+variation: v1
+name: Hash drift — known signer, unknown SHA-256
+platform: sentinelone
+os:
+- windows
+- macos
+identity_tier: IT-4
+primitive: TP-PROC-HASH
+severity: low
+status: blocked-on-harvest
+refs:
+  apps:
+  - '*'
+query: 'event.type = "Process Creation"
+
+  AND tgt.process.publisher in contains anycase ({{ app_field:signer }})
+
+  AND NOT tgt.process.image.sha256 in ({{ hashes:* }})
+
+  AND NOT tgt.process.image.path contains anycase "Helper"
+
+  '
+notes: MAINTENANCE LOOP, NOT AN ALERT. Route to a harvest queue, not to analysts. Output feeds step 4
+  of identity/hashes/README.md. Signer match is the guardrail — never auto-append a hash on filename alone
+  or the dictionary becomes an attacker-writable allowlist.

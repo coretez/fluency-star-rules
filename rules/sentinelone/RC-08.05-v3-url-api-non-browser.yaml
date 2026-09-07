@@ -1,0 +1,24 @@
+id: RC-08.05/v3
+contract: RC-08.05
+variation: v3
+name: AI API URL from non-browser process
+platform: sentinelone
+os:
+- windows
+- macos
+identity_tier: null
+primitive: TP-URL
+severity: high
+status: active
+refs:
+  domains:
+  - api_endpoints
+query: 'event.type in ("GET", "POST", "CONNECT", "PUT", "HEAD", "OPTIONS", "DELETE")
+
+  AND url.address in contains anycase ({{ domains:api_endpoints }})
+
+  AND NOT src.process.name in anycase ({{ browser_processes }})
+
+  '
+notes: 'The URL-based twin of RC-08.04, and strictly better where TP-URL is available: same non-browser
+  logic, but survives DoH and carries the actual request path rather than only a resolved hostname.'

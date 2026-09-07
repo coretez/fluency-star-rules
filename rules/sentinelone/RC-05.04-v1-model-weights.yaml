@@ -1,0 +1,20 @@
+id: RC-05.04/v1
+contract: RC-05.04
+variation: v1
+name: Model weights written to disk
+platform: sentinelone
+os:
+- windows
+- macos
+- linux
+identity_tier: IT-3
+primitive: TP-FILE-W
+severity: low
+status: active
+refs: {}
+query: 'event.type = "File Creation"
+
+  AND tgt.file.path in contains anycase ({{ model_weight_extensions }})
+
+  '
+notes: Add a size floor if the console supports it — real weights are >1GB.

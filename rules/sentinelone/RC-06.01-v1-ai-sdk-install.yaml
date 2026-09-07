@@ -1,0 +1,19 @@
+id: RC-06.01/v1
+contract: RC-06.01
+variation: v1
+name: AI SDK / coding CLI install
+platform: sentinelone
+os:
+- windows
+- macos
+- linux
+primitive: TP-SCRIPT
+severity: medium
+status: active
+refs: {}
+query: 'event.type = "Process Creation"
+
+  AND tgt.process.cmdline in contains anycase ({{ cli_cmdline }})
+
+  '
+notes: Excludes bare process-name matching on 'claude'/'llm' — known FP collision with unrelated binaries.

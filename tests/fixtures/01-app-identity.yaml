@@ -1,0 +1,265 @@
+# AI Application Identity Dictionary
+# Feeds rule generation for all platforms. See 00-RULE-CONTRACT.md Part B.
+#
+# ── IDENTITY TIERS ───────────────────────────────────────────────────────────
+#   IT-1 signer     durable across updates, rename, relocation  ← lead with this
+#   IT-2 metadata   durable across rename + relocation          ← the rename killer
+#   IT-3 path       durable across updates only                 ← harvests IT-4
+#   IT-4 sha256     durable across rename + relocation          ← breaks every release
+#
+# ── WHY sha256 IS HERE ───────────────────────────────────────────────────────
+#   Catches a known binary that was RENAMED or MOVED. Path rules (IT-3) miss both.
+#   Cost: every vendor release invalidates the entry. Hence the harvest loop below.
+#
+# ── HARVEST LOOP (RC-9.4) ────────────────────────────────────────────────────
+#   1. IT-3 path rules + IT-1 signer rules run continuously
+#   2. Weekly: extract distinct (sha256, path, signer, original_filename, version)
+#      for every app below from EDR telemetry
+#   3. Diff against `sha256` arrays here
+#   4. New hash + matching signer + matching original_filename → auto-append,
+#      annotate first_seen, open a low-priority review task
+#   5. New hash + NO signer match → do NOT append. Escalate: possible impostor
+#   6. Existing hash at an unexpected path → RC-9.5, escalate as evasion
+#
+#   Step 5 is the guardrail. Never auto-trust a hash on filename alone, or the
+#   dictionary becomes an allowlist an attacker can write to.
+#
+# ── VERIFICATION STATE ───────────────────────────────────────────────────────
+#   verify: true  →  value is a STARTING POINT, not confirmed. Validate on a real
+#                    install before shipping a rule that depends on it.
+#   sha256: []    →  intentionally empty. NEVER populate from a public source or
+#                    from this file. Harvest from a binary you installed yourself
+#                    from the vendor's official download, or from your own fleet.
+
+schema_version: 1
+updated: 2026-09-05
+
+apps:
+
+  - id: claude-desktop
+    vendor: Anthropic
+    category: assistant-desktop
+    contract: [RC-2.1, RC-3.1, RC-9.4, RC-9.5, RC-9.6]
+    risk: medium
+    windows:
+      signer: "Anthropic"            # IT-1  verify: exact Authenticode subject
+      verify: true
+      original_filename: "claude.exe" # IT-2  survives rename on disk
+      paths:                          # IT-3
+        - "\\AppData\\Local\\AnthropicClaude\\claude.exe"
+        - "\\AppData\\Local\\AnthropicClaude\\app-*\\claude.exe"
+      installer_names:
+        - "Claude-Setup-x64.exe"
+        - "AnthropicClaude*Setup*.exe"
+      sha256: []                      # IT-4  harvest; Squirrel auto-update = frequent churn
+    macos:
+      team_id: ""                     # IT-1  verify: `codesign -dv --verbose=4 /Applications/Claude.app`
+      signer: "Anthropic"
+      verify: true
+      bundle_id: "com.anthropic.claudefordesktop"   # IT-2  verify
+      paths:
+        - "/Applications/Claude.app/Contents/MacOS/Claude"
+      sha256: []
+    notes: >
+      Electron. Spawns Helper (GPU/Renderer/Plugin) children — exclude "Helper" from
+      execution rules or one launch yields 4-8 duplicate events.
+
+  - id: chatgpt-desktop
+    vendor: OpenAI
+    category: assistant-desktop
+    contract: [RC-2.1, RC-3.2, RC-9.4, RC-9.5, RC-9.6]
+    risk: medium
+    windows:
+      signer: "OpenAI"
+      verify: true
+      original_filename: "ChatGPT.exe"
+      paths:
+        - "\\AppData\\Local\\Programs\\ChatGPT\\ChatGPT.exe"
+        - "\\WindowsApps\\OpenAI.ChatGPT*"
+      installer_names: ["ChatGPT-Setup*.exe", "ChatGPTSetup*.msi"]
+      sha256: []
+      notes: "Also ships as MSIX/Store — RC-2.4 path differs from the Squirrel build."
+    macos:
+      team_id: ""
+      signer: "OpenAI"
+      verify: true
+      bundle_id: "com.openai.chat"
+      paths: ["/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"]
+      sha256: []
+
+  - id: ollama
+    vendor: Ollama
+    category: local-inference
+    contract: [RC-2.1, RC-5.1, RC-5.2, RC-5.3, RC-5.4]
+    risk: high
+    windows:
+      signer: "Ollama"
+      verify: true
+      original_filename: "ollama.exe"
+      paths:
+        - "\\AppData\\Local\\Programs\\Ollama\\ollama.exe"
+        - "\\AppData\\Local\\Programs\\Ollama\\ollama app.exe"
+      installer_names: ["OllamaSetup.exe"]
+      sha256: []
+    macos:
+      team_id: ""
+      verify: true
+      bundle_id: "com.electron.ollama"
+      paths:
+        - "/Applications/Ollama.app/Contents/MacOS/Ollama"
+        - "/usr/local/bin/ollama"
+      sha256: []
+    linux:
+      paths: ["/usr/local/bin/ollama", "/usr/bin/ollama"]
+      sha256: []
+    runtime:
+      default_port: 11434
+      listen_cmdline: ["ollama serve", "ollama run"]
+      exposure_check: "bind 0.0.0.0 rather than 127.0.0.1 → RC-5.3, unauthenticated LAN API"
+
+  - id: lm-studio
+    vendor: LM Studio
+    category: local-inference
+    contract: [RC-2.1, RC-5.1, RC-5.2, RC-5.4]
+    risk: high
+    windows:
+      original_filename: "LM Studio.exe"
+      verify: true
+      paths: ["\\AppData\\Local\\Programs\\lm-studio\\LM Studio.exe"]
+      sha256: []
+    macos:
+      bundle_id: "ai.elementlabs.lmstudio"
+      verify: true
+      paths: ["/Applications/LM Studio.app/Contents/MacOS/LM Studio"]
+      sha256: []
+    runtime:
+      default_port: 1234
+      listen_cmdline: ["lms server start"]
+
+  - id: cursor
+    vendor: Anysphere
+    category: ai-ide
+    contract: [RC-2.1, RC-3.4, RC-6.3]
+    risk: high
+    windows:
+      signer: "Anysphere"
+      verify: true
+      original_filename: "Cursor.exe"
+      paths: ["\\AppData\\Local\\Programs\\cursor\\Cursor.exe"]
+      installer_names: ["CursorUserSetup*.exe", "CursorSetup*.exe"]
+      sha256: []
+    macos:
+      bundle_id: "com.todesktop.230313mzl4w4u92"   # ToDesktop wrapper — verify
+      verify: true
+      paths: ["/Applications/Cursor.app/Contents/MacOS/Cursor"]
+      sha256: []
+    notes: "Reads and transmits source code. Higher risk than a chat client."
+
+  - id: perplexity-comet
+    vendor: Perplexity
+    category: ai-browser
+    contract: [RC-3.3, RC-7.3]
+    risk: high
+    windows:
+      original_filename: "Comet.exe"
+      verify: true
+      paths: ["\\AppData\\Local\\Perplexity\\Comet\\Application\\Comet.exe"]
+      sha256: []
+    macos:
+      bundle_id: "ai.perplexity.comet"
+      verify: true
+      paths: ["/Applications/Comet.app/Contents/MacOS/Comet"]
+      sha256: []
+    notes: "Agentic browser — acts on the user's behalf. Wider blast radius than chat."
+
+  - id: gpt4all
+    vendor: Nomic
+    category: local-inference
+    contract: [RC-2.1, RC-5.1, RC-5.4]
+    risk: high
+    windows:
+      original_filename: "gpt4all.exe"
+      verify: true
+      paths: ["\\AppData\\Local\\nomic.ai\\GPT4All\\bin\\gpt4all.exe"]
+      installer_names: ["gpt4all-installer-win64.exe"]
+      sha256: []
+    macos:
+      bundle_id: "io.gpt4all.gpt4all"
+      verify: true
+      paths: ["/Applications/gpt4all.app/Contents/MacOS/gpt4all"]
+      sha256: []
+
+# ── CLI / SDK (RC-6) ─────────────────────────────────────────────────────────
+# Mostly interpreted or frequently rebuilt — IT-4 has poor value here.
+# Detect on cmdline (TP-SCRIPT), not hash.
+
+cli_tools:
+  - id: claude-code
+    package: "@anthropic-ai/claude-code"
+    binaries: ["claude"]
+    install_cmdline: ["npm install -g @anthropic-ai/claude-code", "npx @anthropic-ai/claude-code"]
+    contract: [RC-6.1, RC-6.2]
+  - id: openai-codex
+    package: "@openai/codex"
+    binaries: ["codex"]
+    install_cmdline: ["npm install -g @openai/codex"]
+    contract: [RC-6.1, RC-6.2]
+  - id: aider
+    package: "aider-chat"
+    binaries: ["aider"]
+    install_cmdline: ["pip install aider-chat", "pipx install aider-chat"]
+    contract: [RC-6.1, RC-6.2]
+  - id: ai-sdks
+    install_cmdline:
+      - "pip install openai"
+      - "pip install anthropic"
+      - "pip install litellm"
+      - "npm install openai"
+      - "npm install @anthropic-ai/sdk"
+    contract: [RC-6.1]
+
+# ── API KEY INDICATORS (RC-6.5) ──────────────────────────────────────────────
+# Presence in env, dotfile, or CI config = programmatic use + credential hygiene finding.
+api_key_patterns:
+  - name: anthropic
+    env: ["ANTHROPIC_API_KEY"]
+    prefix: "sk-ant-"
+  - name: openai
+    env: ["OPENAI_API_KEY", "AZURE_OPENAI_API_KEY"]
+    prefix: "sk-"
+  - name: google
+    env: ["GOOGLE_API_KEY", "GEMINI_API_KEY"]
+  - name: aggregators
+    env: ["OPENROUTER_API_KEY", "TOGETHER_API_KEY", "GROQ_API_KEY"]
+
+# ── DOMAINS (RC-8) — tiered, see contract Part C ──────────────────────────────
+domains:
+  tier_a_jurisdiction:   # RC-8.1  highest severity
+    [deepseek.com, deepseek.ai, moonshot.cn, kimi.moonshot.cn, tongyi.aliyun.com,
+     dashscope.aliyuncs.com, yiyan.baidu.com, chatglm.cn, bigmodel.cn, 01.ai,
+     lingyiwanwu.com, hunyuan.tencent.com, minimaxi.com]
+  tier_b_aggregator:     # RC-8.2 / RC-9.3  masks backend model
+    [openrouter.ai, poe.com, together.ai, replicate.com, groq.com, fireworks.ai,
+     deepinfra.com, novita.ai, hyperbolic.xyz, requesty.ai, helicone.ai, portkey.ai]
+  tier_c_consumer:       # RC-8.3  scope to restricted groups only
+    [chatgpt.com, openai.com, oaiusercontent.com, claude.ai, anthropic.com,
+     gemini.google.com, aistudio.google.com, perplexity.ai, grok.com, x.ai,
+     copilot.microsoft.com, mistral.ai, character.ai]
+  tier_d_agentic:        # RC-7.3
+    [comet.perplexity.ai, dia.computer, manus.im, genspark.ai, browser-use.com,
+     browserbase.com, multion.ai]
+  api_endpoints:         # RC-8.4  the high-signal non-browser rule
+    [api.anthropic.com, api.openai.com, api.x.ai, generativelanguage.googleapis.com,
+     api.mistral.ai, api.deepseek.com, api.groq.com, api.cohere.ai, api.together.xyz,
+     api.perplexity.ai, openai.azure.com]
+  doh_resolvers:         # RC-9.2
+    [cloudflare-dns.com, mozilla.cloudflare-dns.com, chrome.cloudflare-dns.com,
+     dns.google, dns.quad9.net, doh.opendns.com, dns.nextdns.io, dns.adguard.com]
+
+doh_resolver_ips:        # RC-9.1  one of the few valid IP-match cases
+  [1.1.1.1, 1.0.0.1, 8.8.8.8, 8.8.4.4, 9.9.9.9, 149.112.112.112,
+   94.140.14.14, 94.140.15.15, 208.67.222.222, 208.67.220.220]
+
+browser_processes:       # negation list for RC-8.4
+  windows: [chrome.exe, msedge.exe, firefox.exe, brave.exe, opera.exe, arc.exe]
+  macos: ["Google Chrome", "Microsoft Edge", "Safari", firefox, "Brave Browser", Arc]

@@ -1,0 +1,28 @@
+id: RC-05.02/v1
+contract: RC-05.02
+variation: v1
+name: Local inference server bound to a listening port
+platform: sentinelone
+os:
+- windows
+- macos
+- linux
+identity_tier: null
+primitive:
+- TP-PROC
+- TP-NET
+severity: medium
+status: active
+refs:
+  apps:
+  - ollama
+  - lm-studio
+query: 'event.type = "IP Connect"
+
+  AND event.network.direction = "INCOMING"
+
+  AND dst.port.number in ({{ inference_ports }})
+
+  '
+notes: Distinct from RC-05.01 (runtime executed). This is the server actually accepting connections. RC-05.03
+  narrows to off-host, which is the security finding.

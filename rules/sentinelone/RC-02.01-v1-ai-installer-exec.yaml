@@ -1,0 +1,21 @@
+id: RC-02.01/v1
+contract: RC-02.01
+variation: v1
+name: AI installer executed
+platform: sentinelone
+os:
+- windows
+identity_tier: IT-3
+primitive: TP-PROC
+severity: medium
+status: active
+refs:
+  apps:
+  - '*'
+query: 'event.type = "Process Creation"
+
+  AND endpoint.os = "windows"
+
+  AND tgt.process.image.path in contains anycase ({{ app_field:installer_names.windows }})
+
+  '

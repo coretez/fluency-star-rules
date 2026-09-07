@@ -1,0 +1,92 @@
+# Telemetry primitives — the portability layer.
+# A contract item declares the primitive it needs; any platform providing that
+# primitive can satisfy it. Confirm every cell in your own environment.
+schema_version: 1
+
+primitives:
+  TP-PROC:       {desc: "Process creation: image path, cmdline, parent"}
+  TP-PROC-HASH:  {desc: "Process creation carrying image SHA-256"}
+  TP-PROC-SIG:   {desc: "Process creation carrying code-signer identity"}
+  TP-PROC-META:  {desc: "Process creation carrying PE OriginalFilename / bundle ID"}
+  TP-FILE-W:     {desc: "File create/write with full path"}
+  TP-FILE-HASH:  {desc: "File write carrying SHA-256"}
+  TP-REG:        {desc: "Registry write (Windows)"}
+  TP-MOD:        {desc: "Module / image load"}
+  TP-DNS:        {desc: "DNS query with originating process"}
+  TP-NET:        {desc: "Network connect: remote IP, port, process"}
+  TP-URL:        {desc: "HTTP hostname or full URL"}
+  TP-SCRIPT:     {desc: "Interpreter script / command-line content"}
+
+# yes | partial | no
+support:
+  # Authoring surface — where STAR rules run. Verify in console per agent version.
+  sentinelone_console:
+    TP-PROC: yes         # Process Creation
+    TP-PROC-HASH: yes    # VERIFIED: tgt.process.image.sha256
+    TP-PROC-SIG: yes     # VERIFIED: tgt.process.publisher, .signedStatus, .verifiedStatus
+    TP-PROC-META: yes    # VERIFIED: tgt.process.image.originalFileName + .internalName exist in DV 2.0
+    TP-FILE-W: yes
+    TP-FILE-HASH: yes
+    TP-REG: yes
+    TP-MOD: yes
+    TP-DNS: yes          # DNS Resolved — blind under DoH
+    TP-NET: yes          # IP Connect
+    TP-URL: yes          # VERIFIED: event.type GET/POST/CONNECT/PUT/HEAD/OPTIONS/DELETE
+                         #   fields url.address, event.url.action, event.url.source
+    TP-SCRIPT: yes
+
+  # What Fluency actually receives — VERIFIED 2026-09-05 against a live deployment.
+  # Threat/alert-shaped subset, NOT the raw DV process-creation stream.
+  # Hashes + signer exist on SOURCE/PARENT process only, never target.
+  sentinelone_via_fluency:
+    TP-PROC: yes         # @s1.tgtproc* (shallow) + @s1.sourceprocess* (rich)
+    TP-PROC-HASH: yes    # @s1.sourceprocesssha256 — source/parent only, NO tgtprocsha256
+    TP-PROC-SIG: yes     # @s1.sourceprocessfilesigneridentity — source/parent only
+    TP-PROC-META: no     # absent from the ALERTS feed only — present in DV 2.0. Fix = Cloud Funnel
+    TP-FILE-W: unverified
+    TP-FILE-HASH: unverified
+    TP-REG: unverified
+    TP-MOD: unverified
+    TP-DNS: no           # absent from the ALERTS feed only — event.dns.request exists in DV 2.0
+    TP-NET: unverified
+    TP-URL: no           # absent from the ALERTS feed only — url event category exists in DV 2.0
+    TP-SCRIPT: yes       # @s1.sourceprocesscommandline
+  defender:
+    TP-PROC: yes         # DeviceProcessEvents
+    TP-PROC-HASH: yes
+    TP-PROC-SIG: yes
+    TP-PROC-META: yes    # ProcessVersionInfoOriginalFileName
+    TP-FILE-W: yes
+    TP-FILE-HASH: yes
+    TP-REG: yes
+    TP-MOD: yes
+    TP-DNS: yes
+    TP-NET: yes
+    TP-URL: yes          # DeviceNetworkEvents.RemoteUrl — strongest of the three
+    TP-SCRIPT: yes
+  falcon:
+    TP-PROC: yes         # ProcessRollup2
+    TP-PROC-HASH: yes    # SHA256HashData
+    TP-PROC-SIG: yes
+    TP-PROC-META: yes    # OriginalFilename
+    TP-FILE-W: yes
+    TP-FILE-HASH: yes
+    TP-REG: yes
+    TP-MOD: yes
+    TP-DNS: yes          # DnsRequest
+    TP-NET: yes          # NetworkConnectIP4
+    TP-URL: partial
+    TP-SCRIPT: yes
+  sysmon:
+    TP-PROC: yes         # EID 1
+    TP-PROC-HASH: yes    # EID 1, enable SHA256
+    TP-PROC-SIG: partial # EID 7 only, not EID 1
+    TP-PROC-META: yes    # EID 1 OriginalFileName
+    TP-FILE-W: yes       # EID 11
+    TP-FILE-HASH: no     # EID 11 carries no hash
+    TP-REG: yes          # EID 12/13/14
+    TP-MOD: yes          # EID 7
+    TP-DNS: yes          # EID 22
+    TP-NET: yes          # EID 3
+    TP-URL: no
+    TP-SCRIPT: partial

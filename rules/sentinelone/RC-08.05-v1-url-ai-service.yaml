@@ -1,0 +1,26 @@
+id: RC-08.05/v1
+contract: RC-08.05
+variation: v1
+name: AI service hostname in web traffic (URL)
+platform: sentinelone
+os:
+- windows
+- macos
+identity_tier: null
+primitive: TP-URL
+severity: medium
+status: active
+refs:
+  domains:
+  - tier_a_jurisdiction
+  - tier_b_aggregator
+  - tier_c_consumer
+  - tier_d_agentic
+query: 'event.type in ("GET", "POST", "CONNECT", "PUT", "HEAD", "OPTIONS", "DELETE")
+
+  AND url.address in contains anycase ({{ domains:all_ai }})
+
+  '
+notes: NOT blinded by DoH — unlike RC-08.01/02/03 which depend on TP-DNS. The agent observes the request
+  itself, so an encrypted resolver hides nothing. Where TP-URL is available this is the stronger implementation
+  of RC-08 and the DNS variants become the fallback, not the primary.

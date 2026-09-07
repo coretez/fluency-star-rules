@@ -1,0 +1,22 @@
+id: RC-03.02/v4
+contract: RC-03.02
+variation: v4
+name: ChatGPT Desktop execution (signer)
+platform: sentinelone
+os:
+- windows
+- macos
+identity_tier: IT-1
+primitive: TP-PROC-SIG
+severity: low
+status: active
+refs:
+  apps:
+  - chatgpt-desktop
+query: 'event.type = "Process Creation"
+
+  AND tgt.process.publisher contains anycase "{{ app:chatgpt-desktop.windows.signer }}"
+
+  AND NOT tgt.process.image.path contains anycase "Helper"
+
+  '

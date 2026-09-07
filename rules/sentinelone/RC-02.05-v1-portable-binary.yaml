@@ -1,0 +1,19 @@
+id: RC-02.05/v1
+contract: RC-02.05
+variation: v1
+name: Portable AI binary from user-writable path
+platform: sentinelone
+os:
+- windows
+- macos
+identity_tier: IT-1
+primitive: TP-PROC
+severity: high
+status: active
+refs:
+  apps:
+  - '*'
+query: "event.type = \"Process Creation\"\nAND tgt.process.image.path in contains anycase ({{ user_writable_paths\
+  \ }})\nAND (\n  tgt.process.name in anycase ({{ app_field:original_filename.windows }})\n  OR tgt.process.image.path\
+  \ in contains anycase (\"ollama\",\"llama-server\",\"llamafile\",\"koboldcpp\",\"lm studio\")\n)\n"
+notes: Install-evasion by construction.

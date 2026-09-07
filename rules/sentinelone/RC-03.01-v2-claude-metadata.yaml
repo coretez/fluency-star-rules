@@ -1,0 +1,32 @@
+id: RC-03.01/v2
+contract: RC-03.01
+variation: v2
+name: Claude Desktop execution (metadata)
+platform: sentinelone
+os:
+- windows
+identity_tier: IT-2
+primitive: TP-PROC-META
+severity: low
+status: active
+refs:
+  apps:
+  - claude-desktop
+query: 'event.type = "Process Creation"
+
+  AND endpoint.os = "windows"
+
+  AND tgt.process.image.originalFileName in anycase ({{ app:claude-desktop.windows.original_filename }})
+
+  AND NOT tgt.process.image.path contains anycase "{{ app:claude-desktop.windows.install_root }}"
+
+  '
+notes: 'THE RENAME KILLER. NOT-install_root makes this fire only on the anomaly: right binary, wrong place.
+  v1 already covers standard installs, so this stays silent until someone renames or relocates.
+
+  VERIFY: tgt.file.internalName is documented on File events; availability on Process Creation varies
+  by agent version. If absent, implement as a File Creation rule at install time, or host this variation
+  on Sysmon (EID 1 OriginalFileName) / Falcon / Defender where it is guaranteed.
+
+  macOS excluded deliberately: Info.plist is a sibling file, strippable by extracting the Mach-O. Use
+  v4 there.'

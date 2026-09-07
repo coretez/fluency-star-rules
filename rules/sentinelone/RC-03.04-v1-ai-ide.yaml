@@ -1,0 +1,20 @@
+id: RC-03.04/v1
+contract: RC-03.04
+variation: v1
+name: AI-native IDE execution
+platform: sentinelone
+os:
+- windows
+- macos
+identity_tier: IT-3
+primitive: TP-PROC
+severity: medium
+status: active
+refs:
+  apps:
+  - cursor
+query: "event.type = \"Process Creation\"\nAND (\n  tgt.process.image.path in contains anycase ({{ app:cursor.paths\
+  \ }})\n  OR tgt.process.image.path in contains anycase (\"\\\\Windsurf\\\\Windsurf.exe\",\"/Applications/Windsurf.app/\"\
+  ,\"/Applications/Zed.app/Contents/MacOS/zed\")\n  OR tgt.process.publisher in contains anycase (\"Anysphere\"\
+  ,\"Exafunction\",\"Codeium\")\n)\nAND NOT tgt.process.image.path contains anycase \"Helper\"\n"
+notes: Reads and transmits source code — higher risk than a chat client.

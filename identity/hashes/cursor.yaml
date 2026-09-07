@@ -1,0 +1,8 @@
+# MACHINE-OWNED — see README.md. Do not hand-edit.
+schema_version: 1
+app: cursor
+vendor: Anysphere
+managed_by: tools/harvest.py
+hashes:
+  windows: []
+  macos: []

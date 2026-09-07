@@ -1,0 +1,25 @@
+id: RC-09.06/v1
+contract: RC-09.06
+variation: v1
+name: Renamed binary — AI metadata, mismatched filename
+platform: sentinelone
+os:
+- windows
+identity_tier: IT-2
+primitive: TP-PROC-META
+severity: high
+status: active
+refs:
+  apps:
+  - '*'
+query: 'event.type = "Process Creation"
+
+  AND endpoint.os = "windows"
+
+  AND tgt.process.image.originalFileName in contains anycase ("claude","chatgpt","ollama","cursor","comet")
+
+  AND NOT tgt.process.name in contains anycase ("claude","chatgpt","ollama","cursor","comet")
+
+  '
+notes: Uses tgt.process.image.originalFileName, VERIFIED present in DV 2.0. Not available via the Fluency
+  Alerts feed — author and test in the S1 console.

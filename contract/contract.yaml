@@ -1,0 +1,114 @@
+# Rule Contract — GenAI Usage Visibility
+#
+# WHAT MUST BE DETECTED, not how. Vendor-neutral.
+#
+# ── ID RULES (non-negotiable) ────────────────────────────────────────────────
+#   Format: RC-FF.II  zero-padded, lexically sortable.
+#   IDs are IMMUTABLE. Deprecate, never renumber, never reuse a retired number.
+#   Reusing a number is how a rule silently claims coverage it does not have.
+#
+# ── IDENTITY TIERS ───────────────────────────────────────────────────────────
+#   IT-1 signer    durable: update + rename + relocation   ← macOS backbone
+#   IT-2 metadata  durable: rename + relocation            ← Windows backbone
+#   IT-3 path      durable: update only                    ← harvests IT-4
+#   IT-4 sha256    durable: rename + relocation            ← breaks every release
+#
+#   Windows: OriginalFilename is INSIDE the PE. IT-2 is strong.
+#   macOS:   Info.plist is a SIBLING file in the bundle — strippable. Lean IT-1.
+#
+# severity: low | medium | high
+# status:   active | planned | accepted-gap | deprecated
+
+schema_version: 1
+contract_version: "1.0.0"
+updated: 2026-09-05
+
+families:
+  RC-01: {name: Acquisition,              desc: "Obtaining the software"}
+  RC-02: {name: Installation,             desc: "Software landing on disk installed"}
+  RC-03: {name: Execution,                desc: "AI application running"}
+  RC-04: {name: Persistence,              desc: "Configured to auto-start"}
+  RC-05: {name: Local inference,          desc: "Model runtime serving locally"}
+  RC-06: {name: Developer integration,    desc: "CLI, SDK, IDE plugin, MCP"}
+  RC-07: {name: Browser-resident,         desc: "Extensions, PWAs, AI browsers"}
+  RC-08: {name: Network egress,           desc: "Resolution/connection to AI services"}
+  RC-09: {name: Evasion and obfuscation,  desc: "DoH, aggregators, renamed binaries"}
+  RC-10: {name: Data movement precursor,  desc: "Bulk collection before AI egress"}
+  RC-11: {name: Identity and tenancy,     desc: "Personal vs corporate account"}
+
+items:
+  RC-01.01: {intent: "AI installer downloaded to disk",                primitive: [TP-FILE-W, TP-FILE-HASH], tiers: [IT-3, IT-4], severity: low,    status: planned}
+  RC-01.02: {intent: "AI installer fetched by CLI (curl/wget/IWR)",    primitive: [TP-PROC],                 tiers: [],           severity: medium, status: planned}
+  RC-01.03: {intent: "AI app pulled via OS package manager",           primitive: [TP-PROC],                 tiers: [],           severity: low,    status: planned}
+  RC-01.04: {intent: "AI installer arriving from removable media",     primitive: [TP-FILE-W],               tiers: [IT-3],       severity: medium, status: planned}
+
+  RC-02.01: {intent: "AI installer/setup process executed",            primitive: [TP-PROC],                 tiers: [IT-2, IT-3], severity: medium, status: active}
+  RC-02.02: {intent: "App bundle written to /Applications (macOS)",    primitive: [TP-FILE-W],               tiers: [IT-3],       severity: medium, status: active}
+  RC-02.03: {intent: "Uninstall/ARP registry key created",             primitive: [TP-REG],                  tiers: [IT-3],       severity: low,    status: planned}
+  RC-02.04: {intent: "MSIX/Store package install",                     primitive: [TP-PROC, TP-REG],         tiers: [IT-3],       severity: medium, status: planned}
+  RC-02.05: {intent: "Portable binary executed from user-writable path", primitive: [TP-PROC],               tiers: [IT-1, IT-2, IT-4], severity: high, status: active,
+             note: "Install-evasion by construction"}
+
+  RC-03.01: {intent: "Claude Desktop executed",                        primitive: [TP-PROC],                 tiers: [IT-1, IT-2, IT-3, IT-4], severity: low, status: active}
+  RC-03.02: {intent: "ChatGPT Desktop executed",                       primitive: [TP-PROC],                 tiers: [IT-1, IT-2, IT-3, IT-4], severity: low, status: active}
+  RC-03.03: {intent: "Copilot/Gemini/Perplexity desktop executed",     primitive: [TP-PROC],                 tiers: [IT-1, IT-3], severity: low,    status: planned}
+  RC-03.04: {intent: "AI-native IDE executed (Cursor, Windsurf, Zed)", primitive: [TP-PROC],                 tiers: [IT-1, IT-3], severity: medium, status: active,
+             note: "Reads and transmits source code — higher risk than chat"}
+  RC-03.05: {intent: "AI desktop app executed from non-standard path", primitive: [TP-PROC],                 tiers: [IT-1, IT-2, IT-4], severity: high, status: planned}
+  RC-03.06: {intent: "Unsigned binary carrying AI metadata",           primitive: [TP-PROC-SIG, TP-PROC-META], tiers: [IT-2],     severity: high,   status: active,
+             note: "Impostor or tampered build — malware triage, not policy"}
+
+  RC-04.01: {intent: "AI app added to Run key / Startup folder",       primitive: [TP-REG, TP-FILE-W],       tiers: [IT-3],       severity: low,    status: planned}
+  RC-04.02: {intent: "LaunchAgent/LaunchDaemon for AI app (macOS)",    primitive: [TP-FILE-W],               tiers: [IT-3],       severity: low,    status: planned}
+  RC-04.03: {intent: "AI runtime registered as a service",             primitive: [TP-REG],                  tiers: [IT-3],       severity: medium, status: planned}
+  RC-04.04: {intent: "Scheduled task invoking an AI CLI",              primitive: [TP-PROC, TP-SCRIPT],      tiers: [],           severity: medium, status: planned}
+
+  RC-05.01: {intent: "Local LLM runtime executed",                     primitive: [TP-PROC],                 tiers: [IT-1, IT-3, IT-4], severity: medium, status: active}
+  RC-05.02: {intent: "Local inference server bound to a listening port", primitive: [TP-PROC, TP-NET],       tiers: [],           severity: medium, status: active}
+  RC-05.03: {intent: "Local inference server reachable off-host",      primitive: [TP-NET],                  tiers: [],           severity: high,   status: active,
+             note: "Unauthenticated LLM API on the corporate LAN — a real security finding"}
+  RC-05.04: {intent: "Model weights written to disk",                  primitive: [TP-FILE-W],               tiers: [IT-3],       severity: low,    status: active}
+
+  RC-06.01: {intent: "AI SDK installed via pip/npm/gem",               primitive: [TP-PROC, TP-SCRIPT],      tiers: [],           severity: medium, status: active}
+  RC-06.02: {intent: "AI coding CLI executed",                         primitive: [TP-PROC],                 tiers: [IT-3],       severity: medium, status: active}
+  RC-06.03: {intent: "IDE AI extension installed",                     primitive: [TP-FILE-W],               tiers: [IT-3],       severity: medium, status: planned}
+  RC-06.04: {intent: "MCP server process spawned",                     primitive: [TP-PROC],                 tiers: [],           severity: medium, status: planned}
+  RC-06.05: {intent: "AI API key present in env/config write",         primitive: [TP-FILE-W, TP-SCRIPT],    tiers: [],           severity: high,   status: active,
+             note: "Programmatic use + credential hygiene finding in one"}
+
+  RC-07.01: {intent: "AI browser extension installed",                 primitive: [TP-FILE-W],               tiers: [IT-3],       severity: medium, status: planned,
+             note: "Chrome extension IDs are opaque — enforce via Chrome Enterprise policy, use this as drift check"}
+  RC-07.02: {intent: "AI service installed as PWA / app shortcut",     primitive: [TP-FILE-W, TP-REG],       tiers: [IT-3],       severity: medium, status: planned}
+  RC-07.03: {intent: "AI-native browser executed (Comet, Dia, Atlas)", primitive: [TP-PROC],                 tiers: [IT-1, IT-3], severity: high,   status: active,
+             note: "Agentic — acts on the user's behalf, wider blast radius than chat"}
+
+  RC-08.01: {intent: "Resolution of high-risk-jurisdiction AI domain", primitive: [TP-DNS],                  tiers: [],           severity: high,   status: active}
+  RC-08.02: {intent: "Resolution of AI aggregator/proxy domain",       primitive: [TP-DNS],                  tiers: [],           severity: high,   status: active}
+  RC-08.03: {intent: "Resolution of mainstream consumer AI domain",    primitive: [TP-DNS],                  tiers: [],           severity: medium, status: active,
+             note: "Scope to restricted groups only — fleet-wide is unusable"}
+  RC-08.04: {intent: "AI API resolution from a NON-BROWSER process",   primitive: [TP-DNS],                  tiers: [],           severity: high,   status: active,
+             note: "Highest-value single item in the contract — isolates programmatic bulk data movement"}
+  RC-08.05: {intent: "AI service URL observed in web traffic",         primitive: [TP-URL],                  tiers: [],           severity: medium, status: active,
+             note: "VERIFIED 2026-09-05: DV 2.0 carries HTTP methods as event types (GET/POST/CONNECT/...) with url.address. NOT blinded by DoH — where TP-URL is available this is the primary RC-08 implementation and the DNS variants are the fallback"}
+  RC-08.06: {intent: "Off-host connection to local inference port",    primitive: [TP-NET],                  tiers: [],           severity: high,   status: planned}
+
+  RC-09.01: {intent: "Browser bypassing corporate DNS via DoH",        primitive: [TP-NET],                  tiers: [],           severity: medium, status: active,
+             note: "Blinds all of RC-08 — fix by policy, detection is a stopgap"}
+  RC-09.02: {intent: "DoH resolver hostname resolved",                 primitive: [TP-DNS],                  tiers: [],           severity: medium, status: active}
+  RC-09.03: {intent: "AI traffic via aggregator masking backend model", primitive: [TP-DNS],                 tiers: [],           severity: high,   status: active}
+  RC-09.04: {intent: "HASH DRIFT — known signer+metadata, unknown SHA-256", primitive: [TP-PROC-HASH, TP-PROC-SIG], tiers: [IT-1, IT-2, IT-4], severity: low, status: active,
+             note: "Maintenance loop, not an alert. Routes to harvest queue. Signer match is the guardrail — never auto-append on filename alone"}
+  RC-09.05: {intent: "RELOCATED KNOWN BINARY — known hash, unexpected path", primitive: [TP-PROC-HASH],      tiers: [IT-3, IT-4], severity: high,   status: active,
+             note: "The payoff for maintaining hashes. Identity confirmed, location wrong. Not policy noise — deliberate evasion"}
+  RC-09.06: {intent: "RENAMED BINARY — AI metadata, mismatched filename", primitive: [TP-PROC-META],         tiers: [IT-2],       severity: high,   status: active}
+
+  RC-10.01: {intent: "Bulk repo read then AI API egress, same process tree", primitive: [TP-FILE-W, TP-DNS], tiers: [],           severity: high,   status: planned, siem_only: true}
+  RC-10.02: {intent: "Archive created then AI API egress within N min", primitive: [TP-FILE-W, TP-DNS],      tiers: [],           severity: high,   status: planned, siem_only: true}
+  RC-10.03: {intent: "First-ever AI resolution from restricted-group endpoint", primitive: [TP-DNS],         tiers: [],           severity: medium, status: planned, siem_only: true}
+  RC-10.04: {intent: "DoH bypass present AND zero AI DNS = coverage gap", primitive: [TP-NET, TP-DNS],       tiers: [],           severity: medium, status: planned, siem_only: true,
+             note: "Meta-detection. Without it a DoH-enabled fleet reports as compliant"}
+
+  RC-11.01: {intent: "Personal account on a sanctioned AI domain",     primitive: [TP-URL],                  tiers: [],           severity: high,   status: accepted-gap,
+             note: "NOT SATISFIABLE BY EDR. Same hostname, same IPs as corporate SSO. Needs SWG tenant-restriction headers or IdP enforcement. Documented as a gap so nobody assumes coverage"}
+  RC-11.02: {intent: "AI service auth bypassing corporate IdP",        primitive: [],                        tiers: [],           severity: high,   status: accepted-gap,
+             note: "IdP/SWG only"}

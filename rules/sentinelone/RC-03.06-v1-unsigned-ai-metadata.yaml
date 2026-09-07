@@ -1,0 +1,24 @@
+id: RC-03.06/v1
+contract: RC-03.06
+variation: v1
+name: Unsigned binary carrying AI metadata
+platform: sentinelone
+os:
+- windows
+identity_tier: IT-2
+primitive: TP-PROC-SIG
+severity: high
+status: active
+refs:
+  apps:
+  - '*'
+query: 'event.type = "Process Creation"
+
+  AND endpoint.os = "windows"
+
+  AND tgt.process.image.originalFileName in contains anycase ("claude","chatgpt","ollama","cursor","copilot","comet")
+
+  AND tgt.process.signedStatus != "signed"
+
+  '
+notes: Impostor or tampered build. Malware triage, not policy.

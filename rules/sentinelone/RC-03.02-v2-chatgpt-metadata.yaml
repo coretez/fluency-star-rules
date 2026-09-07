@@ -1,0 +1,25 @@
+id: RC-03.02/v2
+contract: RC-03.02
+variation: v2
+name: ChatGPT Desktop execution (metadata)
+platform: sentinelone
+os:
+- windows
+identity_tier: IT-2
+primitive: TP-PROC-META
+severity: low
+status: active
+refs:
+  apps:
+  - chatgpt-desktop
+query: 'event.type = "Process Creation"
+
+  AND endpoint.os = "windows"
+
+  AND tgt.process.image.originalFileName in anycase ({{ app:chatgpt-desktop.windows.original_filename
+  }})
+
+  AND NOT tgt.process.image.path contains anycase "{{ app:chatgpt-desktop.windows.install_root }}"
+
+  '
+notes: ''

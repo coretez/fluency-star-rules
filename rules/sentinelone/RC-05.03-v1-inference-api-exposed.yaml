@@ -1,0 +1,27 @@
+id: RC-05.03/v1
+contract: RC-05.03
+variation: v1
+name: Local inference API reachable off-host
+platform: sentinelone
+os:
+- windows
+- macos
+- linux
+primitive: TP-NET
+severity: high
+status: active
+refs:
+  apps:
+  - ollama
+  - lm-studio
+query: 'event.type = "IP Connect"
+
+  AND event.network.direction = "INCOMING"
+
+  AND dst.port.number in ({{ inference_ports }})
+
+  AND NOT src.ip.address in ("127.0.0.1", "::1")
+
+  '
+notes: Unauthenticated LLM API on the corporate LAN. The one local-AI finding that is a genuine security
+  issue rather than a policy one.

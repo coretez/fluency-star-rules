@@ -1,0 +1,24 @@
+id: RC-08.04/v1
+contract: RC-08.04
+variation: v1
+name: AI API resolved by NON-BROWSER process
+platform: sentinelone
+os:
+- windows
+- macos
+- linux
+primitive: TP-DNS
+severity: high
+status: active
+refs:
+  domains:
+  - api_endpoints
+query: 'event.type = "DNS Resolved"
+
+  AND event.dns.request in contains anycase ({{ domains:api_endpoints }})
+
+  AND NOT src.process.name in anycase ({{ browser_processes }})
+
+  '
+notes: HIGHEST-VALUE SINGLE RULE. Strips ordinary browsing, leaves scripts/agents/CI moving data in bulk.
+  If you deploy one network rule, this one.

@@ -1,0 +1,173 @@
+# App identity — HUMAN-OWNED. Signers, paths, embedded metadata.
+# Changes rarely (vendor rebrands, new app onboarded).
+# SHA-256 lives in identity/hashes/ — machine-owned, do not put hashes here.
+#
+# verify: true  →  STARTING POINT, not confirmed. Validate against a real install
+#                  before shipping a rule that depends on it.
+schema_version: 1
+
+apps:
+  claude-desktop:
+    vendor: Anthropic
+    category: assistant-desktop
+    risk: medium
+    contract: [RC-02.01, RC-03.01, RC-09.04, RC-09.05, RC-09.06]
+    windows:
+      signer: "Anthropic"
+      original_filename: "claude.exe"
+      paths: ["\\AppData\\Local\\AnthropicClaude\\claude.exe"]
+      install_root: "\\AppData\\Local\\AnthropicClaude\\"
+      installer_names: ["Claude-Setup-x64.exe", "AnthropicClaude"]
+      verify: true
+    macos:
+      signer: "Anthropic"
+      team_id: ""                                   # codesign -dv --verbose=4 /Applications/Claude.app
+      bundle_id: "com.anthropic.claudefordesktop"
+      paths: ["/Applications/Claude.app/Contents/MacOS/Claude"]
+      install_root: "/Applications/Claude.app/"
+      verify: true
+    notes: "Electron. Exclude 'Helper' or one launch yields 4-8 duplicate events. Squirrel auto-update = frequent hash churn."
+
+  chatgpt-desktop:
+    vendor: OpenAI
+    category: assistant-desktop
+    risk: medium
+    contract: [RC-02.01, RC-03.02, RC-09.04, RC-09.05, RC-09.06]
+    windows:
+      signer: "OpenAI"
+      original_filename: "ChatGPT.exe"
+      paths: ["\\AppData\\Local\\Programs\\ChatGPT\\ChatGPT.exe", "\\WindowsApps\\OpenAI.ChatGPT"]
+      install_root: "\\AppData\\Local\\Programs\\ChatGPT\\"
+      installer_names: ["ChatGPT-Setup", "ChatGPTSetup"]
+      verify: true
+    macos:
+      signer: "OpenAI"
+      team_id: ""
+      bundle_id: "com.openai.chat"
+      paths: ["/Applications/ChatGPT.app/Contents/MacOS/ChatGPT"]
+      install_root: "/Applications/ChatGPT.app/"
+      verify: true
+    notes: "Also ships MSIX/Store — RC-02.04 path differs from the Squirrel build."
+
+  ollama:
+    vendor: Ollama
+    category: local-inference
+    risk: high
+    contract: [RC-02.01, RC-05.01, RC-05.02, RC-05.03, RC-05.04]
+    windows:
+      signer: "Ollama"
+      original_filename: "ollama.exe"
+      paths: ["\\AppData\\Local\\Programs\\Ollama\\ollama.exe", "\\AppData\\Local\\Programs\\Ollama\\ollama app.exe"]
+      install_root: "\\AppData\\Local\\Programs\\Ollama\\"
+      installer_names: ["OllamaSetup.exe"]
+      verify: true
+    macos:
+      bundle_id: "com.electron.ollama"
+      paths: ["/Applications/Ollama.app/Contents/MacOS/Ollama", "/usr/local/bin/ollama"]
+      install_root: "/Applications/Ollama.app/"
+      verify: true
+    linux:
+      paths: ["/usr/local/bin/ollama", "/usr/bin/ollama"]
+      verify: true
+    runtime:
+      default_port: 11434
+      listen_cmdline: ["ollama serve", "ollama run"]
+      exposure: "bind 0.0.0.0 not 127.0.0.1 → RC-05.03, unauthenticated LAN API"
+
+  lm-studio:
+    vendor: Element Labs
+    category: local-inference
+    risk: high
+    contract: [RC-02.01, RC-05.01, RC-05.02, RC-05.04]
+    windows:
+      original_filename: "LM Studio.exe"
+      paths: ["\\AppData\\Local\\Programs\\lm-studio\\LM Studio.exe"]
+      install_root: "\\AppData\\Local\\Programs\\lm-studio\\"
+      verify: true
+    macos:
+      bundle_id: "ai.elementlabs.lmstudio"
+      paths: ["/Applications/LM Studio.app/Contents/MacOS/LM Studio"]
+      install_root: "/Applications/LM Studio.app/"
+      verify: true
+    runtime:
+      default_port: 1234
+      listen_cmdline: ["lms server start"]
+
+  cursor:
+    vendor: Anysphere
+    category: ai-ide
+    risk: high
+    contract: [RC-02.01, RC-03.04, RC-06.03]
+    windows:
+      signer: "Anysphere"
+      original_filename: "Cursor.exe"
+      paths: ["\\AppData\\Local\\Programs\\cursor\\Cursor.exe"]
+      install_root: "\\AppData\\Local\\Programs\\cursor\\"
+      installer_names: ["CursorUserSetup", "CursorSetup"]
+      verify: true
+    macos:
+      bundle_id: "com.todesktop.230313mzl4w4u92"     # ToDesktop wrapper — verify
+      paths: ["/Applications/Cursor.app/Contents/MacOS/Cursor"]
+      install_root: "/Applications/Cursor.app/"
+      verify: true
+    notes: "Reads and transmits source code. Higher risk than a chat client."
+
+  comet:
+    vendor: Perplexity
+    category: ai-browser
+    risk: high
+    contract: [RC-03.03, RC-07.03]
+    windows:
+      signer: "Perplexity"
+      original_filename: "Comet.exe"
+      paths: ["\\AppData\\Local\\Perplexity\\Comet\\Application\\Comet.exe"]
+      install_root: "\\AppData\\Local\\Perplexity\\Comet\\"
+      installer_names: ["Comet-Setup", "Perplexity-Setup"]
+      verify: true
+    macos:
+      bundle_id: "ai.perplexity.comet"
+      paths: ["/Applications/Comet.app/Contents/MacOS/Comet"]
+      install_root: "/Applications/Comet.app/"
+      verify: true
+    notes: "Agentic browser — acts on the user's behalf. Wider blast radius than chat."
+
+  gpt4all:
+    vendor: Nomic
+    category: local-inference
+    risk: high
+    contract: [RC-02.01, RC-05.01, RC-05.04]
+    windows:
+      original_filename: "gpt4all.exe"
+      paths: ["\\AppData\\Local\\nomic.ai\\GPT4All\\bin\\gpt4all.exe"]
+      install_root: "\\AppData\\Local\\nomic.ai\\GPT4All\\"
+      installer_names: ["gpt4all-installer-win64.exe"]
+      verify: true
+    macos:
+      bundle_id: "io.gpt4all.gpt4all"
+      paths: ["/Applications/gpt4all.app/Contents/MacOS/gpt4all"]
+      install_root: "/Applications/gpt4all.app/"
+      verify: true
+
+# CLI/SDK — interpreted or frequently rebuilt. IT-4 has poor value; detect on cmdline.
+cli_tools:
+  claude-code:   {package: "@anthropic-ai/claude-code", binaries: [claude],  cmdline: ["@anthropic-ai/claude-code"], contract: [RC-06.01, RC-06.02]}
+  openai-codex:  {package: "@openai/codex",             binaries: [codex],   cmdline: ["@openai/codex"],             contract: [RC-06.01, RC-06.02]}
+  aider:         {package: "aider-chat",                binaries: [aider],   cmdline: ["aider-chat"],                contract: [RC-06.01, RC-06.02]}
+  ai-sdks:       {cmdline: ["pip install openai", "pip install anthropic", "pip install litellm",
+                            "pip3 install openai", "pip3 install anthropic",
+                            "npm install openai", "npm install @anthropic-ai/sdk",
+                            "brew install ollama", "ollama.com/install.sh", "gh copilot"],
+                  contract: [RC-06.01]}
+
+api_key_patterns:
+  env: [ANTHROPIC_API_KEY, OPENAI_API_KEY, AZURE_OPENAI_API_KEY, GOOGLE_API_KEY,
+        GEMINI_API_KEY, OPENROUTER_API_KEY, TOGETHER_API_KEY, GROQ_API_KEY]
+  prefixes: ["sk-ant-"]
+
+browser_processes:
+  windows: [chrome.exe, msedge.exe, firefox.exe, brave.exe, opera.exe, arc.exe]
+  macos: ["Google Chrome", "Microsoft Edge", "Safari", firefox, "Brave Browser", Arc]
+
+user_writable_paths:
+  windows: ["\\Downloads\\", "\\Temp\\", "\\Desktop\\", "\\Public\\", "\\AppData\\Local\\Temp\\"]
+  macos: ["/Downloads/", "/tmp/", "/Volumes/", "/private/tmp/"]

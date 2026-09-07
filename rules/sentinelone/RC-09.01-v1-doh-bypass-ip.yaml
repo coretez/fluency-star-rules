@@ -1,0 +1,26 @@
+id: RC-09.01/v1
+contract: RC-09.01
+variation: v1
+name: Browser bypassing corporate DNS via DoH
+platform: sentinelone
+os:
+- windows
+- macos
+primitive: TP-NET
+severity: medium
+status: active
+refs:
+  domains:
+  - doh_resolver_ips
+query: 'event.type = "IP Connect"
+
+  AND dst.port.number = 443
+
+  AND dst.ip.address in ({{ domains:doh_resolver_ips }})
+
+  AND src.process.name in anycase ({{ browser_processes }})
+
+  '
+notes: 'DoH blinds ALL of RC-08. Detection is a stopgap — fix by policy (Chrome/Edge DnsOverHttpsMode=off,
+  Firefox network.trr.mode=5). One of the few valid IP-match cases: public resolver IPs are stable and
+  unambiguous.'

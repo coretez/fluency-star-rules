@@ -1,0 +1,22 @@
+id: RC-05.01/v1
+contract: RC-05.01
+variation: v1
+name: Local LLM runtime executed
+platform: sentinelone
+os:
+- windows
+- macos
+- linux
+identity_tier: IT-3
+primitive: TP-PROC
+severity: medium
+status: active
+refs:
+  apps:
+  - ollama
+  - lm-studio
+  - gpt4all
+query: "event.type = \"Process Creation\"\nAND (\n  tgt.process.cmdline in contains anycase (\"ollama\
+  \ serve\",\"ollama run\",\"llama-server\",\"lms server start\",\"--host 0.0.0.0\",\"text-generation-webui\"\
+  ,\"vllm serve\")\n  OR tgt.process.image.path in contains anycase ({{ app:ollama.paths }})\n  OR tgt.process.image.path\
+  \ in contains anycase (\"llama.cpp\",\"llamafile\",\"koboldcpp\")\n)\n"

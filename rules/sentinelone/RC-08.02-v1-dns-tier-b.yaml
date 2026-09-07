@@ -1,0 +1,22 @@
+id: RC-08.02/v1
+contract: RC-08.02
+variation: v1
+name: AI aggregator/proxy domain resolved
+platform: sentinelone
+os:
+- windows
+- macos
+- linux
+primitive: TP-DNS
+severity: high
+status: active
+refs:
+  domains:
+  - tier_b_aggregator
+query: 'event.type = "DNS Resolved"
+
+  AND event.dns.request in contains anycase ({{ domains:tier_b_aggregator }})
+
+  '
+notes: Routes to arbitrary backend models — one allowed domain becomes a tunnel to any provider including
+  Tier A. Policy-evasion signal, not ordinary shadow AI.

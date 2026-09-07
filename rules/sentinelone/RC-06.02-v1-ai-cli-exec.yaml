@@ -1,0 +1,23 @@
+id: RC-06.02/v1
+contract: RC-06.02
+variation: v1
+name: AI coding CLI executed
+platform: sentinelone
+os:
+- windows
+- macos
+- linux
+identity_tier: IT-3
+primitive: TP-PROC
+severity: medium
+status: active
+refs: {}
+query: 'event.type = "Process Creation"
+
+  AND tgt.process.name in anycase ({{ cli_binaries }})
+
+  AND NOT tgt.process.image.path in contains anycase ("\\Windows\\", "/System/")
+
+  '
+notes: 'Execution, not install (RC-06.01). Known FP: ''claude'' and ''codex'' collide with unrelated binaries
+  and usernames. Tune per tenant in the overlay before enabling.'

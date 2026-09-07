@@ -1,0 +1,46 @@
+# AI service domains — HUMAN-OWNED. Tiered by response, not by vendor.
+# Changes monthly. Separate file so domain edits never collide with hash harvests.
+schema_version: 1
+
+tier_a_jurisdiction:   # RC-08.01 — data residency / legal exposure
+  [deepseek.com, deepseek.ai, moonshot.cn, kimi.moonshot.cn, tongyi.aliyun.com,
+   dashscope.aliyuncs.com, yiyan.baidu.com, wenxin.baidu.com, chatglm.cn, bigmodel.cn,
+   01.ai, lingyiwanwu.com, hunyuan.tencent.com, minimaxi.com, minimax.chat]
+
+tier_b_aggregator:     # RC-08.02 / RC-09.03 — masks the backend model
+  [openrouter.ai, poe.com, together.ai, replicate.com, groq.com, fireworks.ai,
+   anyscale.com, deepinfra.com, novita.ai, hyperbolic.xyz, targon.com, requesty.ai,
+   litellm.ai, helicone.ai, portkey.ai]
+
+tier_c_consumer:       # RC-08.03 — scope to restricted groups only
+  [chatgpt.com, openai.com, oaiusercontent.com, oaistatic.com, claude.ai, anthropic.com,
+   gemini.google.com, aistudio.google.com, bard.google.com, perplexity.ai, grok.com, x.ai,
+   copilot.microsoft.com, githubcopilot.com, mistral.ai, chat.mistral.ai,
+   character.ai, janitorai.com, chub.ai]
+
+tier_d_agentic:        # RC-07.03
+  [comet.perplexity.ai, dia.computer, arc.net, manus.im, genspark.ai, flowith.io,
+   browser-use.com, browserbase.com, multion.ai, adept.ai, induced.ai]
+
+api_endpoints:         # RC-08.04 — the high-signal non-browser rule
+  [api.anthropic.com, api.openai.com, api.x.ai, generativelanguage.googleapis.com,
+   api.mistral.ai, api.deepseek.com, api.groq.com, api.cohere.ai, api.together.xyz,
+   api.perplexity.ai, openai.azure.com, bedrock-runtime]
+
+doh_resolvers:         # RC-09.02
+  [cloudflare-dns.com, mozilla.cloudflare-dns.com, chrome.cloudflare-dns.com,
+   dns.google, dns.quad9.net, doh.opendns.com, dns.nextdns.io,
+   doh.cleanbrowsing.org, dns.adguard.com]
+
+doh_resolver_ips:      # RC-09.01 — one of the few valid IP-match cases: stable, unambiguous
+  ["1.1.1.1", "1.0.0.1", "8.8.8.8", "8.8.4.4", "9.9.9.9", "149.112.112.112",
+   "94.140.14.14", "94.140.15.15", "208.67.222.222", "208.67.220.220"]
+
+model_weight_extensions: [".gguf", ".safetensors", ".ggml", ".pth"]
+inference_ports: [11434, 1234, 8080, 5000, 7860, 8000]
+
+# Composite selectors used by the TP-URL rules (RC-08.05). Rendered by tools/render.py
+# as the union of the referenced tiers — keeps one source of truth.
+_composites:
+  all_ai: [tier_a_jurisdiction, tier_b_aggregator, tier_c_consumer, tier_d_agentic]
+  high_risk: [tier_a_jurisdiction, tier_b_aggregator, api_endpoints]

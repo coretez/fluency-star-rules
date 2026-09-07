@@ -1,0 +1,28 @@
+# Tenant overlay. Copy to <tenant-shortname>.yaml, never edit this template.
+# Base rules stay identical across customers; only this file differs.
+schema_version: 1
+tenant: _template
+display_name: "Customer Display Name"
+
+# RC-08.03 is unusable fleet-wide. Groups where ANY consumer AI use is out of policy.
+# SentinelOne STAR rule allowance for this tenant (SOP-00 §5).
+star_allowance: 100
+star_in_use: 43
+
+restricted_groups: ["Finance", "Legal", "HR"]
+
+# Tools this customer has licensed. Suppresses rules but NEVER RC-09.05/09.06 —
+# an approved app running from the wrong path is still evasion.
+approved_apps: []          # e.g. [claude-desktop, cursor]
+
+# Groups exempt from policy rules (engineering with sanctioned AI tooling).
+exempt_groups: []
+
+# Per-rule overrides. Omit a rule to take the base default.
+overrides: {}
+#  RC-03.04/v1: {enabled: false, reason: "Cursor licensed org-wide", ticket: "SEC-1234"}
+#  RC-08.03/v1: {severity: high}
+
+# Endpoints running your own sanctioned AI integrations — excluded from RC-08.04
+# so first-party apps don't fire the non-browser API rule.
+integration_endpoints: []

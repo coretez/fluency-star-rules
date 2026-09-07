@@ -1,0 +1,24 @@
+id: RC-03.01/v4
+contract: RC-03.01
+variation: v4
+name: Claude Desktop execution (signer)
+platform: sentinelone
+os:
+- windows
+- macos
+identity_tier: IT-1
+primitive: TP-PROC-SIG
+severity: low
+status: active
+refs:
+  apps:
+  - claude-desktop
+query: 'event.type = "Process Creation"
+
+  AND tgt.process.publisher contains anycase "{{ app:claude-desktop.windows.signer }}"
+
+  AND NOT tgt.process.image.path contains anycase "Helper"
+
+  '
+notes: Broadest and most durable. Catches versions never seen, including builds released after this rule
+  was written. Deploy v1+v4 first on Windows; v4+v3 first on macOS.

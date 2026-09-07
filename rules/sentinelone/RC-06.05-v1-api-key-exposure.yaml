@@ -1,0 +1,19 @@
+id: RC-06.05/v1
+contract: RC-06.05
+variation: v1
+name: AI API key in command line
+platform: sentinelone
+os:
+- windows
+- macos
+- linux
+primitive: TP-SCRIPT
+severity: high
+status: active
+refs: {}
+query: 'event.type = "Process Creation"
+
+  AND tgt.process.cmdline in contains anycase ({{ api_key_patterns }})
+
+  '
+notes: Programmatic use plus a credential-hygiene finding in one.

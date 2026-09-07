@@ -1,0 +1,25 @@
+id: RC-02.02/v1
+contract: RC-02.02
+variation: v1
+name: AI app bundle written to /Applications
+platform: sentinelone
+os:
+- macos
+identity_tier: IT-3
+primitive: TP-FILE-W
+severity: medium
+status: active
+refs:
+  apps:
+  - '*'
+query: 'event.type = "File Creation"
+
+  AND endpoint.os = "osx"
+
+  AND tgt.file.path in contains anycase ({{ app_field:install_root.macos }})
+
+  AND tgt.file.path contains anycase "Contents/Info.plist"
+
+  '
+notes: Info.plist clause collapses a several-thousand-file bundle copy to ~1 event. Without it the rule
+  is unusable.

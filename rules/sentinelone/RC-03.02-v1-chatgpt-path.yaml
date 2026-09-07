@@ -1,0 +1,22 @@
+id: RC-03.02/v1
+contract: RC-03.02
+variation: v1
+name: ChatGPT Desktop execution (path)
+platform: sentinelone
+os:
+- windows
+- macos
+identity_tier: IT-3
+primitive: TP-PROC
+severity: low
+status: active
+refs:
+  apps:
+  - chatgpt-desktop
+query: 'event.type = "Process Creation"
+
+  AND tgt.process.image.path in contains anycase ({{ app:chatgpt-desktop.paths }})
+
+  AND NOT tgt.process.image.path contains anycase "Helper"
+
+  '

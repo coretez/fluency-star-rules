@@ -1,0 +1,21 @@
+id: RC-03.01/v3
+contract: RC-03.01
+variation: v3
+name: Claude Desktop execution (hash)
+platform: sentinelone
+os:
+- windows
+- macos
+identity_tier: IT-4
+primitive: TP-PROC-HASH
+severity: low
+status: blocked-on-harvest
+refs:
+  apps:
+  - claude-desktop
+query: 'event.type = "Process Creation"
+
+  AND tgt.process.image.sha256 in ({{ hashes:claude-desktop }})
+
+  '
+notes: Breaks on every Squirrel auto-update. Kept alive by RC-09.04. Real payoff is RC-09.05.

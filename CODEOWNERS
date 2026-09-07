@@ -1,0 +1,8 @@
+# identity/hashes/ is bot-written and appears in NOT-in() exclusion clauses (RC-09.04).
+# Write access there = ability to create a blind spot. Gate it separately.
+/identity/hashes/   @detection-eng-leads
+/identity/          @detection-eng
+/contract/          @detection-eng-leads
+/rules/             @detection-eng
+/tenants/           @mssp-ops
+/tools/             @detection-eng

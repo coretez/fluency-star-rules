@@ -1,0 +1,23 @@
+id: RC-08.03/v1
+contract: RC-08.03
+variation: v1
+name: Consumer AI domain resolved (scoped)
+platform: sentinelone
+os:
+- windows
+- macos
+- linux
+primitive: TP-DNS
+severity: medium
+status: active
+refs:
+  domains:
+  - tier_c_consumer
+query: 'event.type = "DNS Resolved"
+
+  AND event.dns.request in contains anycase ({{ domains:tier_c_consumer }})
+
+  AND agent.group.name in anycase ({{ tenant:restricted_groups }})
+
+  '
+notes: MUST be scoped via tenant overlay restricted_groups. Fleet-wide this is unusable.

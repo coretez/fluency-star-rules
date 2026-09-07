@@ -1,0 +1,25 @@
+id: RC-09.05/v1
+contract: RC-09.05
+variation: v1
+name: Relocated known binary — known hash, unexpected path
+platform: sentinelone
+os:
+- windows
+- macos
+identity_tier: IT-4
+primitive: TP-PROC-HASH
+severity: high
+status: blocked-on-harvest
+refs:
+  apps:
+  - '*'
+query: 'event.type = "Process Creation"
+
+  AND tgt.process.image.sha256 in ({{ hashes:* }})
+
+  AND NOT tgt.process.image.path in contains anycase ({{ app_field:install_root }})
+
+  '
+notes: THE PAYOFF FOR MAINTAINING HASHES AT ALL. Identity confirmed, location wrong. Unlike everything
+  else in this pack this is not policy noise — it is deliberate evasion. Hash-only inventory tells you
+  what is installed; this turns the same dictionary into a detection.

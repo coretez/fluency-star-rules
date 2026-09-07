@@ -1,0 +1,8 @@
+# MACHINE-OWNED — see README.md. Do not hand-edit.
+schema_version: 1
+app: lm-studio
+vendor: Element Labs
+managed_by: tools/harvest.py
+hashes:
+  windows: []
+  macos: []

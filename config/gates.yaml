@@ -1,0 +1,37 @@
+# Deployment gate thresholds. Enforced by tools/preflight.py.
+# Change here, not in prose. Every number is tunable; the defaults are starting points
+# derived from SOP-00's constraint that AI detection must not degrade SOC operations.
+schema_version: 1
+
+volume_budget:            # events per 100 endpoints per day, measured at T2
+  site_wide: 1.0
+  group_scoped: 10.0
+  harvest_queue: 50.0     # RC-09.04 — maintenance telemetry, not analyst-facing
+  drift_multiplier: 3.0   # T4 volume > T2 prediction x this → back to T2
+
+canary:
+  min_days: 7
+  min_days_network: 14    # RC-08.x — weekly business cycles distort DNS volume
+  max_fp_rate: 0.10
+
+rule_budget:
+  max_pct_of_star_allowance: 0.25
+  max_rules_absolute: 20
+
+severity_ceiling:         # console severity, NOT contract severity
+  default_max: medium
+  may_be_high: [RC-05.03/v1, RC-09.05/v1]
+
+response_actions:
+  allowed: [alert]
+  forbidden: [kill, quarantine, isolate, remediate, rollback]   # not tunable per tenant
+
+health:
+  dead_rule_days: 90      # 0 fires in this window → review, do not auto-delete
+  stale_verify_days: 90   # identity/apps.yaml verify:true entries needing re-check
+  hash_staleness_days: 30 # no harvest in this window → RC-09.05 coverage is decaying
+
+scope_policy:
+  site_wide_allowed: [RC-02, RC-03, RC-05, RC-09]
+  group_scoped_required: [RC-06, RC-07]
+  restricted_groups_required: [RC-08.03]
